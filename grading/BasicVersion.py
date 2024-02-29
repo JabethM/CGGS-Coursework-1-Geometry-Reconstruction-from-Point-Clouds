@@ -2,12 +2,14 @@ import os
 import sys
 import pickle
 import numpy as np
+from functools import partial
 
 sys.path.append(os.path.join('..', 'code'))
 from ReconstructionFunctions import load_off_file, compute_RBF_weights, evaluate_RBF, wendland, biharmonic, polyharmonic
 
 if __name__ == '__main__':
-
+    wendy = partial(wendland, 0.1)
+    func = polyharmonic
     data_path = os.path.join('..', 'data')  # Replace with the path to your folder
 
     epsilonRange = [1e-4, 1e-3, 1e-2, 1e-1]
@@ -31,10 +33,10 @@ if __name__ == '__main__':
                 loaded_data = pickle.load(pickle_file)
 
             w, RBFCentres, _ = compute_RBF_weights(loaded_data['inputPoints'], loaded_data['inputNormals'],
-                                                   polyharmonic,
+                                                   func,
                                                    loaded_data['currEpsilon'])
 
-            RBFValues = evaluate_RBF(loaded_data['xyz'], RBFCentres, polyharmonic, w)
+            RBFValues = evaluate_RBF(loaded_data['xyz'], RBFCentres, func, w)
 
             print("w error: ", np.amax(loaded_data['w'] - w))
             print("RBFCentres error: ", np.amax(loaded_data['RBFCentres'] - RBFCentres))

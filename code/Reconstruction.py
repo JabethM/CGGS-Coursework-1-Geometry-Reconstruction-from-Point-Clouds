@@ -6,9 +6,13 @@ from ReconstructionFunctions import load_off_file, compute_RBF_weights, evaluate
 
 
 if __name__ == '__main__':
+
+
     ps.init()
 
-    inputPointNormals, _ = load_off_file(os.path.join('..', 'data', 'bunny-500.off'))
+    
+
+    inputPointNormals, _ = load_off_file(os.path.join( 'data', 'fertility-2500.off'))
     inputPoints = inputPointNormals[:, 0:3]
     inputNormals = inputPointNormals[:, 3:6]
 
@@ -25,7 +29,7 @@ if __name__ == '__main__':
 
     # Parameters
     gridExtent = 1 #the dimensions of the evaluation grid for marching cubes
-    res = 50 #the resolution of the grid (number of nodes)
+    res = 40   #the resolution of the grid (number of nodes)
 
     # Generating and registering the grid
     gridDims = (res, res, res)
@@ -45,10 +49,12 @@ if __name__ == '__main__':
     biharmonic = lambda x: x
     triharmonic = lambda x: x**3
     wendland = lambda b, x: 1/12 * (1 - b * x) * (1 - 3 * b * x)
-    rbffunc = biharmonic
+    rbffunc = triharmonic
     ##
     ##
-    RBFValues = xyz[:,0]**2+xyz[:,1]**2+xyz[:,2]**2-0.5 #stub sphere
+    epsilon = 1e-4
+    w, RBFCentres, _ = compute_RBF_weights(inputPoints, inputNormals, rbffunc, epsilon)
+    RBFValues = evaluate_RBF(xyz, RBFCentres, rbffunc, w)#stub sphere
     ##
     ##
     #########################

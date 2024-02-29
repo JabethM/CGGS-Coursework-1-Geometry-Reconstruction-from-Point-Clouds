@@ -3,12 +3,12 @@ import sys
 import pickle
 import numpy as np
 
-sys.path.append(os.path.join('..', 'code'))
-from ReconstructionFunctions import load_off_file, compute_RBF_weights, evaluate_RBF, Wendland, biharmonic, polyharmonic
+sys.path.append(os.path.join('code'))
+from ReconstructionFunctions import load_off_file, compute_RBF_weights, evaluate_RBF, wendland, biharmonic, polyharmonic
 
 if __name__ == '__main__':
 
-    data_path = os.path.join('..', 'data')  # Replace with the path to your folder
+    data_path = os.path.join('data')  # Replace with the path to your folder
 
     epsilon = 1e-3
     LRange = np.arange(0, 3)

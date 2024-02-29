@@ -2,7 +2,7 @@ import polyscope as ps
 import os
 import sys
 import pickle
-from scipy.spatial import Delaunay
+from functools import partial
 
 sys.path.append(os.path.join('..', 'code'))
 from ReconstructionFunctions import load_off_file, compute_RBF_weights, evaluate_RBF, wendland, biharmonic, polyharmonic
@@ -10,11 +10,11 @@ from ReconstructionFunctions import load_off_file, compute_RBF_weights, evaluate
 
 ps.init()
 
-data_path = os.path.join('..', 'data')  # Replace with the path to your folder
+data_path = os.path.join('data')  # Replace with the path to your folder
 off_files = [file for file in os.listdir(data_path) if file.endswith(".off")]
 epsilonRange = [1e-4, 1e-3, 1e-2, 1e-1]
 
-currFileIndex = 1
+currFileIndex = 5
 currEpsilonIndex = 0
 
 off_file_path = os.path.join(data_path, off_files[currFileIndex])
@@ -36,8 +36,9 @@ RBFValues = evaluate_RBF(loaded_data['xyz'], RBFCentres, polyharmonic, w)
 
 
 # Add the mesh to Polyscope
-ps_mesh = ps.register_point_cloud("RBF Mesh", inputPoints)
-ps_vf = ps.register_surface_mesh("reconstruction", loaded_data['xyz'], RBFValues)
+ps_mesh_inputs = ps.register_point_cloud("Input Mesh", loaded_data['inputPoints'])
+ps_mesh_epPlus = ps.register_point_cloud("RBF Mesh", RBFCentres)
+#ps_vf = ps.register_surface_mesh("reconstruction", loaded_data['xyz'], RBFValues)
 # Add the normals to visualization
 # Color the mesh based on RBF values
 #ps_mesh.add_scalar_quantity("RBF Values", RBFValues, defined_on='vertices')
