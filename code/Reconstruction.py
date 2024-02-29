@@ -42,6 +42,10 @@ if __name__ == '__main__':
 
     ##########################
     ## you code of computation and evaluation goes here
+    biharmonic = lambda x: x
+    triharmonic = lambda x: x**3
+    wendland = lambda b, x: 1/12 * (1 - b * x) * (1 - 3 * b * x)
+    rbffunc = biharmonic
     ##
     ##
     RBFValues = xyz[:,0]**2+xyz[:,1]**2+xyz[:,2]**2-0.5 #stub sphere

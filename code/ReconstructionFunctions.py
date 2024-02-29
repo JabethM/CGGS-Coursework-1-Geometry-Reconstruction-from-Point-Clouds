@@ -14,19 +14,46 @@ def load_off_file(file_path):
 
     return vertices, faces
 
+
 def compute_RBF_weights(inputPoints, inputNormals, RBFFunction, epsilon, RBFCentreIndices=[], useOffPoints=True,
                         sparsify=False, l=-1):
+    point_plus = inputPoints + epsilon * inputNormals
+    point_minus = inputPoints - epsilon * inputNormals
+    RBFCentres = np.vstack((inputPoints, point_plus, point_minus))
 
-    ##RBF computation is done in this function
-    w=[]  #RBF weights
-    RBFCentres=[] #RBF centres
-    a=[] #polynomial coefficients (for Section 2)
-    return w, RBFCentres, a
+    differences = RBFCentres[:, np.newaxis] - RBFCentres
+    r_matrix = np.linalg.norm(differences, axis=2)
+    F_matrix = RBFFunction(r_matrix)
+
+    n = inputPoints.shape[0]
+    d_vector = np.hstack((np.zeros(n), np.ones(n) * epsilon, np.ones(n) * (- epsilon)))
+    weights = np.linalg.solve(F_matrix, d_vector)
+    a = []  # polynomial coefficients (for Section 2)
+
+    return weights, RBFCentres, a
 
 
 def evaluate_RBF(xyz, centres, RBFFunction, w, l=-1, a=[]):
     values = np.zeros(xyz.shape[0])
 
+    differences = xyz[:, np.newaxis] - centres
+    r_matrix = np.linalg.norm(differences, axis=2)
+    base_results = RBFFunction(r_matrix)
+    expanded_implicit = base_results * w
+
+    values = np.sum(expanded_implicit, axis=1)
+
     ###Complate RBF evaluation here
     return values
 
+
+def wendland(b, r):
+    return 1 / 12 * (1 - b * r) * (1 - 3 * b * r)
+
+
+def biharmonic(r):
+    return r
+
+
+def polyharmonic(r):
+    return r ** 3
