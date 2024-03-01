@@ -2,7 +2,7 @@ import os
 import polyscope as ps
 import numpy as np
 from skimage import measure
-from ReconstructionFunctions import load_off_file, compute_RBF_weights, evaluate_RBF
+from ReconstructionFunctions import load_off_file, compute_RBF_weights, evaluate_RBF, wendland, biharmonic, polyharmonic
 
 
 if __name__ == '__main__':
@@ -48,8 +48,8 @@ if __name__ == '__main__':
     ## you code of computation and evaluation goes here
     biharmonic = lambda x: x
     triharmonic = lambda x: x**3
-    wendland = lambda b, x: 1/12 * (1 - b * x) * (1 - 3 * b * x)
-    rbffunc = triharmonic
+    wendy = lambda x: wendland(5, x)
+    rbffunc = polyharmonic
     ##
     ##
     epsilon = 1e-4
