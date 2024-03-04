@@ -104,6 +104,7 @@ def sparse_RBF(RBFCentres, RBFFunction, epsilon, d_vector, l=-1):
     # TODO: Compute sparse matrix before computing dense matrix
     A_tester = compute_sparse_A(RBFCentres, RBFFunction, epsilon)
     dense = spatial.distance.cdist(RBFCentres, RBFCentres)
+    # Regime 1: apply RBF to distances smaller than max non-zero
     dense_A = RBFFunction(dense)
     sparse_A = csr_matrix(dense_A)
 
@@ -113,7 +114,7 @@ def sparse_RBF(RBFCentres, RBFFunction, epsilon, d_vector, l=-1):
     else:
         Q, m = compute_Q(l, RBFCentres)
         a = np.zeros(m)
-
+        zero_array = csc_matrix((m,m), dtype=float)
         first_row = hstack([sparse_A, Q])
         second_row = hstack([Q.T, np.zeros((m, m))])
         LHS = vstack([first_row, second_row])

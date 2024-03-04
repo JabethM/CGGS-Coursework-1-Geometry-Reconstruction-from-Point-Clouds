@@ -46,9 +46,9 @@ if __name__ == '__main__':
             w_sparse, RBFCentres_sparse, _ = compute_RBF_weights(loaded_data['inputPoints'], loaded_data['inputNormals'],
                                                    func,
                                                    loaded_data['currEpsilon'], sparsify=True)
-            print("w error: ", np.amax(w - w_sparse))
-            print("RBFCentres error: ", np.amax(RBFCentres - RBFCentre_sparse))
-            
+            print("w_reg error: ", np.amax(loaded_data['w'] - w))
+            print("w_sparse error: ", np.amax(loaded_data['w'] - w_sparse))
+
         print()
         print("Polynomial:")
         for LIndex in range(len(LRange)):
@@ -67,6 +67,10 @@ if __name__ == '__main__':
                                                    func,
                                                    loaded_data['epsilon'],sparsify=True, l=loaded_data['l'])
             
-            print("w error: ", np.amax(w - w_sparse))
-            print("RBFCentres error: ", np.amax(RBFCentres - RBFCentre_sparse))
-            print("a error: ", np.amax(a - a_sparse))
+            print("w_reg error: ", np.amax(loaded_data['w'] - w))
+            print("w_sparse error: ", np.amax(loaded_data['w'] - w_sparse))
+            
+         
+            print("a_reg error: ", np.amax(loaded_data['a'] - a))
+            print("a_sparse error: ", np.amax(loaded_data['a'] - a_sparse))
+            
