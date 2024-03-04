@@ -2,9 +2,10 @@ import os
 import numpy as np
 from scipy import spatial
 from scipy import linalg
-from scipy.sparse import csr_matrix, coo_matrix, hstack, vstack
+from scipy.sparse import csr_matrix, coo_matrix, csc_matrix, hstack, vstack
 from scipy.sparse import linalg as splinalg
-
+import time
+import resource
 
 def load_off_file(file_path):
     with open(file_path, 'r') as file:
@@ -35,30 +36,48 @@ def compute_Q(l, coordinates):
 def compute_RBF_weights(inputPoints, inputNormals, RBFFunction, epsilon, RBFCentreIndices=np.array([]),
                         useOffPoints=True,
                         sparsify=False, l=-1):
-    n = inputPoints.shape[0]
-
+    
+    epsilon_Plus = inputPoints + epsilon * inputNormals    
+    epsilon_Minus = inputPoints - epsilon * inputNormals
+    all_centres = np.vstack((inputPoints, epsilon_Plus, epsilon_Minus))
+    
+    overdetermined = False
     if RBFCentreIndices.any():
-        points = inputPoints[RBFCentreIndices]
-        normals = inputNormals[RBFCentreIndices]
+        overdetermined = True
+        centre_points = inputPoints[RBFCentreIndices]
+        centre_normals = inputNormals[RBFCentreIndices]
     else:
-        points = inputPoints
-        normals = inputNormals
+        centre_points= inputPoints
+        centre_normals = inputNormals
+
+    N3 = all_centres.shape[0]
 
     if useOffPoints:
-        epsilon_Plus = points + epsilon * normals
-        epsilon_Minus = points - epsilon * normals
-        RBFCentres = np.vstack((points, epsilon_Plus, epsilon_Minus))
-        d_vector = np.hstack((np.zeros(n), np.ones(n) * epsilon, np.ones(n) * (- epsilon)))
+        N1 = N3 // 3
+        epsilon_Plus = centre_points + epsilon * centre_normals
+        epsilon_Minus = centre_points - epsilon * centre_normals
+        RBFCentres = np.vstack((centre_points, epsilon_Plus, epsilon_Minus))
+        d_vector = np.hstack((np.zeros(N1), np.ones(N1) * epsilon, np.ones(N1) * (- epsilon)))
+
     else:
-        RBFCentres = points
-        d_vector = np.zeros(n)
+        overdetermined = True
+        RBFCentres = centre_points
+        d_vector = np.zeros(N3)  
+    
+    M = RBFCentres.shape[0]
+    
+    
+    del epsilon_Plus
+    del epsilon_Minus
+    del inputNormals
+    del centre_normals
 
     if sparsify:
         solution_vector = sparse_RBF(RBFCentres, RBFFunction, epsilon, d_vector, l)
 
     else:
-        r_matrix = spatial.distance.cdist(RBFCentres, RBFCentres)
-        A_matrix = RBFFunction(r_matrix)
+        A_matrix = spatial.distance.cdist(all_centres, RBFCentres)
+        A_matrix = RBFFunction(A_matrix)
 
         if l < 0:
             LHS = A_matrix
@@ -72,11 +91,14 @@ def compute_RBF_weights(inputPoints, inputNormals, RBFFunction, epsilon, RBFCent
                             [Q.T, np.zeros((m, m))]])
             RHS = np.hstack((d_vector, a))
 
-        lu, piv = linalg.lu_factor(LHS, overwrite_a=True, check_finite=False)
-        solution_vector = linalg.lu_solve((lu, piv), RHS, overwrite_b=True, check_finite=False)
-
-    weights = solution_vector[:3 * n]
-    a = solution_vector[3 * n:]
+        if overdetermined:
+            solution_vector = linalg.lstsq(LHS, RHS)[0]
+        else:
+            lu, piv = linalg.lu_factor(LHS, overwrite_a=True, check_finite=False)
+            solution_vector = linalg.lu_solve((lu, piv), RHS, overwrite_b=True, check_finite=False)
+ 
+    weights = solution_vector[:M]
+    a = solution_vector[M:]
 
     return weights, RBFCentres, a
 
@@ -101,12 +123,13 @@ def evaluate_RBF(xyz, centres, RBFFunction, w, l=-1, a=[]):
 
 
 def sparse_RBF(RBFCentres, RBFFunction, epsilon, d_vector, l=-1):
-    # TODO: Compute sparse matrix before computing dense matrix
-    A_tester = compute_sparse_A(RBFCentres, RBFFunction, epsilon)
+    # On my machine the following is slower and more memory intensive than using scipy functions to calculate dense first
+    sparse_A = compute_sparse_A(RBFCentres, RBFFunction, epsilon)
+
     dense = spatial.distance.cdist(RBFCentres, RBFCentres)
-    # Regime 1: apply RBF to distances smaller than max non-zero
-    dense_A = RBFFunction(dense)
-    sparse_A = csr_matrix(dense_A)
+    sparse_A = csr_matrix(RBFFunction(dense))
+
+    
 
     if l < 0:
         LHS = sparse_A
@@ -127,34 +150,38 @@ def sparse_RBF(RBFCentres, RBFFunction, epsilon, d_vector, l=-1):
 
 
 def compute_sparse_A(RBFCentres, RBFFunction, threshold):
-    size = np.shape(RBFCentres)[0]
 
-    sq_differences = np.sum(np.power(RBFCentres[:, np.newaxis] - RBFCentres, 2), axis=-1)
+    size = np.shape(RBFCentres)[0]
+    sq_differences = spatial.distance.cdist(RBFCentres, RBFCentres)
+
     sq_differences[np.tril_indices(size, k=0)] = 0
-    sq_differences = np.sqrt(sq_differences)
-    sq_differences2 = spatial.distance.cdist(RBFCentres, RBFCentres)
-    data = []
-    row_indices = []
-    col_indices = []
-    for i in range(np.shape(RBFCentres)[0]):
-        row = sq_differences[i][i + 1:]
-        if not row.any():
-            continue
+    
+    boundary = np.inf
+    for i in range(size//2):
+        row = sq_differences[i][i+1:]
 
         threshold_idx = binary_search(row, RBFFunction, threshold)
-        mask = row <= sq_differences[i][threshold_idx + i + 1]
+        bound = sq_differences[i][threshold_idx + i + 1]
+        if bound < boundary:
+            boundary = bound
+    
+    row_indices, col_indices = np.where(sq_differences <= boundary)
+    data = sq_differences[row_indices, col_indices]
 
-        data.append(row[mask])
-        row_indices.append([i] * len(row[mask]))
-        col_indices.append(np.where(mask)[0] + i + 1)
+    del sq_differences
+    del row
+    del boundary
+    del threshold_idx
+    del threshold
 
-    data = RBFFunction(np.concatenate(data, axis=0))
-    row_indices = np.concatenate(row_indices, axis=0, dtype='int64')
-    col_indices = np.concatenate(col_indices, axis=0, dtype='int64')
+    data = RBFFunction(data)
 
     full_data = np.tile(data, 2)
     full_row_indices = np.concatenate((row_indices, col_indices))
     full_col_indices = np.concatenate((col_indices, row_indices))
+
+    del row_indices
+    del col_indices
 
     num_rows = size
     return coo_matrix((full_data, (full_row_indices, full_col_indices)), shape=(num_rows, num_rows))

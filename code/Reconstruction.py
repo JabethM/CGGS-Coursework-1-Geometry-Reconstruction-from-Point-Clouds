@@ -29,7 +29,7 @@ if __name__ == '__main__':
 
     # Parameters
     gridExtent = 1 #the dimensions of the evaluation grid for marching cubes
-    res = 40   #the resolution of the grid (number of nodes)
+    res = 30   #the resolution of the grid (number of nodes)
 
     # Generating and registering the grid
     gridDims = (res, res, res)
@@ -48,13 +48,14 @@ if __name__ == '__main__':
     ## you code of computation and evaluation goes here
     biharmonic = lambda x: x
     triharmonic = lambda x: x**3
-    wendy = lambda x: wendland(5, x)
-    rbffunc = polyharmonic
+    wendy = lambda x: wendland(1, x)
+    rbffunc = wendy
     ##
     ##
-    epsilon = 1e-4
-    w, RBFCentres, _ = compute_RBF_weights(inputPoints, inputNormals, rbffunc, epsilon)
-    RBFValues = evaluate_RBF(xyz, RBFCentres, rbffunc, w)#stub sphere
+    epsilon = 1e-1
+    L = -1
+    w, RBFCentres, a = compute_RBF_weights(inputPoints, inputNormals, rbffunc, epsilon, l=L)
+    RBFValues = evaluate_RBF(xyz, RBFCentres, rbffunc, w, l=L, a=a)#stub sphere
     ##
     ##
     #########################

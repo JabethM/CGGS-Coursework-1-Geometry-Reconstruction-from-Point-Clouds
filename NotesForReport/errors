@@ -1,0 +1,58 @@
+Processing mesh  bunny-1000.off
+No-off-points checks:
+w error:  18.374930023986593
+RBFCentres error:  0.0
+RBFValues error:  0.08397616574456368
+Centre subset checks:
+w error:  118089952.22395016
+RBFCentres error:  0.0
+RBFValues error:  0.9632555135467555
+Processing mesh  bunny-500.off
+No-off-points checks:
+w error:  3.921788769451699
+RBFCentres error:  0.0
+RBFValues error:  0.016448279479204242
+Centre subset checks:
+w error:  259677.77525249758
+RBFCentres error:  0.0
+RBFValues error:  0.8130685370934998
+Processing mesh  cat.off
+No-off-points checks:
+w error:  32.37555586869771
+RBFCentres error:  0.0
+RBFValues error:  0.044085917693728494
+Centre subset checks:
+w error:  123937.27543040621
+RBFCentres error:  0.0
+RBFValues error:  2.2516529104614165
+Processing mesh  dragon-25000.off
+Processing mesh  dragon-3000.off
+No-off-points checks:
+w error:  132.59767442228753
+RBFCentres error:  0.0
+RBFValues error:  0.1526415335757605
+Centre subset checks:
+w error:  274693534.7281037
+RBFCentres error:  0.0
+RBFValues error:  2.898947672918439
+Processing mesh  fertility-2500.off
+No-off-points checks:
+w error:  160.65814775967175
+RBFCentres error:  0.0
+RBFValues error:  1.0994915225536204
+Centre subset checks:
+w error:  394915.42145100544
+RBFCentres error:  0.0
+RBFValues error:  3.4015967204395565
+Processing mesh  horse.off
+Processing mesh  hound.off
+Processing mesh  hyperbolic_paraboloid.off
+No-off-points checks:
+w error:  2.2384465795220265
+RBFCentres error:  0.0
+RBFValues error:  0.019410049603111157
+Centre subset checks:
+w error:  181023589.10604757
+RBFCentres error:  0.0
+RBFValues error:  1.1561840008507716
+Processing mesh  lion-20000.off
