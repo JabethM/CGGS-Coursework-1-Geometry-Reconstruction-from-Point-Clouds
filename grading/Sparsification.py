@@ -10,8 +10,8 @@ from ReconstructionFunctions import load_off_file, compute_RBF_weights, evaluate
 
 if __name__ == '__main__':
 
-    wendy = partial(wendland, 0.1)
-    func = polyharmonic
+    wendy = partial(wendland, 1)
+    func = wendy
 
     data_path = os.path.join('data')  # Replace with the path to your folder
 
